@@ -19,7 +19,29 @@
 
 const { spawn } = require("child_process");
 const log = require("./logger/log.js");
+const fs = require("fs");
+const path = require("path");
 
+// ==================================================
+// 🌸 FCA — LECTURE DE TON COOKIE appstate.json
+// ==================================================
+const appstatePath = path.join(__dirname, 'appstate.json');
+
+if (fs.existsSync(appstatePath)) {
+  try {
+    const appstateContent = fs.readFileSync(appstatePath, 'utf8');
+    fs.writeFileSync(path.join(__dirname, 'account.txt'), appstateContent);
+    log.info("🌸 FCA : appstate.json chargé ✅ → prêt à se connecter à Facebook");
+  } catch (err) {
+    log.error("❌ FCA Erreur : " + err.message);
+  }
+} else {
+  log.warn("⚠️ FCA : appstate.json introuvable ! Mets ton cookie dedans 🌸");
+}
+
+// ==================================================
+// 🌸 DÉMARRAGE DU BOT — TON CODE ORIGINAL
+// ==================================================
 function startProject() {
 	const child = spawn("node", ["EryXenX.js"], {
 		cwd: __dirname,
@@ -29,20 +51,29 @@ function startProject() {
 
 	child.on("close", (code) => {
 		if (code == 2) {
-			log.info("Restarting Project...");
+			log.info("Redémarrage du bot...");
 			startProject();
 		}
 	});
 }
 
 startProject();
+
+// ==================================================
+// 🌸 RENDER — RESTER ACTIF EN PERMANENCE
+// ==================================================
 const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('Bot is running!');
+  res.send('🌸 FCA actif — Angela en ligne ✨');
 });
 
-app.listen(3000, () => {
-  console.log('Uptime server running on port 3000');
+app.listen(PORT, () => {
+  console.log(`🌸 Serveur FCA actif sur port ${PORT} ✅`);
 });
+
+setInterval(() => {
+  console.log("🌸 FCA — Toujours connecté...");
+}, 30000);
