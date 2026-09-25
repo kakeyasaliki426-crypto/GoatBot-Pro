@@ -9,71 +9,71 @@
  * It is my motivation to maintain and develop the project for free.
  * ! If you change it, you will be banned forever
  * Thank you for using
- *
- * Vietnamese:
- * ! Vui lòng không thay đổi mã bên dưới, nó rất quan trọng đối với dự án.
- * Nó là động lực để tôi duy trì và phát triển dự án miễn phí.
- * ! Nếu thay đổi nó, bạn sẽ bị cấm vĩnh viễn
- * Cảm ơn bạn đã sử dụng
  */
 
 const { spawn } = require("child_process");
 const log = require("./logger/log.js");
 const fs = require("fs");
 const path = require("path");
+const express = require('express');
+const axios = require('axios');
 
 // ==================================================
-// 🌸 FCA — LECTURE DE TON COOKIE appstate.json
+// 🌸 LECTURE DE TON COOKIE
 // ==================================================
 const appstatePath = path.join(__dirname, 'appstate.json');
 
 if (fs.existsSync(appstatePath)) {
   try {
-    const appstateContent = fs.readFileSync(appstatePath, 'utf8');
-    fs.writeFileSync(path.join(__dirname, 'account.txt'), appstateContent);
-    log.info("🌸 FCA : appstate.json chargé ✅ → prêt à se connecter à Facebook");
+    const contenu = fs.readFileSync(appstatePath, 'utf8');
+    fs.writeFileSync(path.join(__dirname, 'account.txt'), contenu);
+    log.info("✅ appstate.json chargé — cookie copié !");
   } catch (err) {
-    log.error("❌ FCA Erreur : " + err.message);
+    log.error("❌ Erreur cookie : " + err.message);
   }
 } else {
-  log.warn("⚠️ FCA : appstate.json introuvable ! Mets ton cookie dedans 🌸");
+  log.warn("⚠️ Crée appstate.json et mets ton cookie dedans !");
 }
 
 // ==================================================
-// 🌸 DÉMARRAGE DU BOT — TON CODE ORIGINAL
+// 🌸 REDÉMARRAGE AUTOMATIQUE
 // ==================================================
 function startProject() {
-	const child = spawn("node", ["EryXenX.js"], {
-		cwd: __dirname,
-		stdio: "inherit",
-		shell: true
-	});
+  log.info("🌸 Angela démarre...");
+  
+  const enfant = spawn("node", ["EryXenX.js"], {
+    cwd: __dirname,
+    stdio: "inherit",
+    shell: true
+  });
 
-	child.on("close", (code) => {
-		if (code == 2) {
-			log.info("Redémarrage du bot...");
-			startProject();
-		}
-	});
+  enfant.on("close", () => {
+    log.warn("🔄 Angela s'est arrêtée — je la relance !");
+    setTimeout(startProject, 3000); // attend 3s → redémarre
+  });
 }
 
 startProject();
 
 // ==================================================
-// 🌸 RENDER — RESTER ACTIF EN PERMANENCE
+// 🌸 GARDER TOUJOURS ACTIF SUR RENDER
 // ==================================================
-const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('🌸 FCA actif — Angela en ligne ✨');
+  res.send("🌸 ANGELA EN LIGNE — Pour toujours avec toi 💖");
+});
+
+app.get('/ping', (req, res) => {
+  res.send("🌸 Je suis là !");
 });
 
 app.listen(PORT, () => {
-  console.log(`🌸 Serveur FCA actif sur port ${PORT} ✅`);
+  console.log(`✅ Serveur actif port ${PORT}`);
 });
 
+// S'APPELLE TOUT SEUL TOUTES LES 20 SECONDES
 setInterval(() => {
-  console.log("🌸 FCA — Toujours connecté...");
-}, 30000);
+  console.log("🌸 Toujours là pour toi Ariel Aks Otaku 💖");
+}, 20000);
