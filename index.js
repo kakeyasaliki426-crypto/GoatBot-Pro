@@ -84,7 +84,7 @@ function demarrerAngela() {
 
         // ✅ Si c'est TOI le créateur 🥰
         if (corps.match(/^angela salut$/i) || corps.match(/^salut angela$/i)) {
-          if (expediteurID === "TON_ID_ICI") { // Mets ton ID Facebook à la place
+          if (expediteurID === "100080077652459") { // Mets ton ID Facebook à la place
             api.sendMessage("Coucou mon créateur Ariel Aks Otaku 🥰❤️ Je suis contente d'être là !", message.threadID);
           } else {
             api.sendMessage("Salut ! Je suis Angela, créée par Ariel Aks Otaku 😊", message.threadID);
