@@ -1,99 +1,49 @@
+/**
+ * @author NTKhang
+ * ! Source officiel : https://github.com/ntkhang03/Goat-Bot-V2
+ * Modifié pour Angela — Ariel Aks Otaku
+ */
+
+const { spawn } = require("child_process");
+const log = require("./logger/log.js");
 const fs = require("fs");
 const path = require("path");
-const login = require("@eryxenx/fca");
 
-// 📍 Fichier où les cookies se sauvegardent TOUT SEUL
-const appstatePath = path.join(__dirname, "appstate.json");
-
-// 🔐 TES IDENTIFIANTS — déjà remplis pour toi ✨
-const identifiants = {
-  email: "angelabot23@gmail.com",
-  password: "123bot"
-};
-
-// 💾 Sauvegarde automatique des nouveaux cookies
-function sauvegarderAppstate(appstate) {
-  try {
-    fs.writeFileSync(appstatePath, JSON.stringify(appstate, null, 2));
-    console.log("✅ Cookies sauvegardés automatiquement !");
-  } catch (err) {
-    console.error("❌ Erreur sauvegarde :", err.message);
-  }
+// ✅ Création automatique de account.txt si absent
+const accountPath = path.join(__dirname, "account.txt");
+if (!fs.existsSync(accountPath)) {
+  fs.writeFileSync(accountPath, JSON.stringify({
+    email: "angelabot23@gmail.com",
+    password: "123bot"
+  }, null, 2));
+  log.info("✅ account.txt créé avec tes identifiants !");
 }
 
-// 🚀 Démarrage & reconnexion automatique
-function demarrerAngela() {
-  let etatLocal = [];
-  
-  // Charge les anciens cookies s'ils existent
-  if (fs.existsSync(appstatePath)) {
-    try {
-      etatLocal = JSON.parse(fs.readFileSync(appstatePath, "utf8"));
-    } catch {
-      etatLocal = [];
+function startProject() {
+  const child = spawn("node", ["EryXenX.js"], {
+    cwd: __dirname,
+    stdio: "inherit",
+    shell: true
+  });
+
+  child.on("close", (code) => {
+    if (code == 2) {
+      log.info("🔄 Redémarrage d'Angela...");
+      startProject();
     }
-  }
-
-  // Si cookies vides → utilise email + mot de passe
-  const donneesConnexion = etatLocal.length > 0 ? etatLocal : identifiants;
-
-  login(donneesConnexion, {
-    logLevel: "info",
-    selfListen: true,
-    listenEvents: true,
-    forceLogin: false
-  }, (err, api) => {
-    if (err) {
-      console.log("❌ Erreur :", err.error || err);
-      // Cookies périmés → on efface et on reprend avec email/mdp
-      if (err.error?.includes("login") || err.error?.includes("401") || err.error?.includes("session")) {
-        console.log("🔄 Session renouvelée...");
-        if (fs.existsSync(appstatePath)) fs.unlinkSync(appstatePath);
-        setTimeout(demarrerAngela, 5000);
-      }
-      return;
-    }
-
-    // ✅ Sauvegarde immédiate des nouveaux cookies
-    api.getAppstate((nouveauxCookies) => {
-      sauvegarderAppstate(nouveauxCookies);
-    });
-
-    console.log("");
-    console.log("🤖 ANGELA est ACTIVE ✨");
-    console.log("👑 Créée par Ariel Aks Otaku");
-    console.log("✅ Sauvegarde auto activée — plus besoin de copier les cookies !");
-    console.log("");
-
-    // 📨 Écoute des messages
-    api.listenMqtt((erreur, message) => {
-      if (erreur) {
-        console.log("⚠️ Déconnexion → reconnexion...");
-        setTimeout(demarrerAngela, 3000);
-        return;
-      }
-
-      // ICI tu mettras toutes tes commandes d'Angela
-      // Exemple : si quelqu'un écrit "Angela salut" → elle répond
-      if (message?.body) {
-        const corps = message.body.trim();
-        const expediteurID = message.senderID;
-
-        // Ne répond pas aux messages du bot lui-même
-        if (expediteurID === api.getCurrentUserID()) return;
-
-        // ✅ Si c'est TOI le créateur 🥰
-        if (corps.match(/^angela salut$/i) || corps.match(/^salut angela$/i)) {
-          if (expediteurID === "100080077652459") { // Mets ton ID Facebook à la place
-            api.sendMessage("Coucou mon créateur Ariel Aks Otaku 🥰❤️ Je suis contente d'être là !", message.threadID);
-          } else {
-            api.sendMessage("Salut ! Je suis Angela, créée par Ariel Aks Otaku 😊", message.threadID);
-          }
-        }
-      }
-    });
   });
 }
 
-// 🎯 On lance tout !
-demarrerAngela();
+startProject();
+
+// ✅ Serveur pour garder Render actif
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('🤖 ANGELA — En ligne ! Créée par Ariel Aks Otaku ✨');
+});
+
+app.listen(3000, () => {
+  console.log('✅ Serveur actif sur le port 3000 — Bot maintenu en vie !');
+});
