@@ -1,79 +1,99 @@
-/**
- * @author NTKhang
- * ! The source code is written by NTKhang, please don't change the author's name everywhere. Thank you for using
- * ! Official source code: https://github.com/ntkhang03/Goat-Bot-V2
- * ! If you do not download the source code from the above address, you are using an unknown version and at risk of having your account hacked
- *
- * English:
- * ! Please do not change the below code, it is very important for the project.
- * It is my motivation to maintain and develop the project for free.
- * ! If you change it, you will be banned forever
- * Thank you for using
- */
-
-const { spawn } = require("child_process");
-const log = require("./logger/log.js");
 const fs = require("fs");
 const path = require("path");
-const express = require('express');
-const axios = require('axios');
+const login = require("@eryxenx/fca");
 
-// ==================================================
-// 🌸 LECTURE DE TON COOKIE
-// ==================================================
-const appstatePath = path.join(__dirname, 'appstate.json');
+// 📍 Fichier où les cookies se sauvegardent TOUT SEUL
+const appstatePath = path.join(__dirname, "appstate.json");
 
-if (fs.existsSync(appstatePath)) {
+// 🔐 TES IDENTIFIANTS — déjà remplis pour toi ✨
+const identifiants = {
+  email: "angelabot23@gmail.com",
+  password: "123bot"
+};
+
+// 💾 Sauvegarde automatique des nouveaux cookies
+function sauvegarderAppstate(appstate) {
   try {
-    const contenu = fs.readFileSync(appstatePath, 'utf8');
-    fs.writeFileSync(path.join(__dirname, 'account.txt'), contenu);
-    log.info("✅ appstate.json chargé — cookie copié !");
+    fs.writeFileSync(appstatePath, JSON.stringify(appstate, null, 2));
+    console.log("✅ Cookies sauvegardés automatiquement !");
   } catch (err) {
-    log.error("❌ Erreur cookie : " + err.message);
+    console.error("❌ Erreur sauvegarde :", err.message);
   }
-} else {
-  log.warn("⚠️ Crée appstate.json et mets ton cookie dedans !");
 }
 
-// ==================================================
-// 🌸 REDÉMARRAGE AUTOMATIQUE
-// ==================================================
-function startProject() {
-  log.info("🌸 Angela démarre...");
+// 🚀 Démarrage & reconnexion automatique
+function demarrerAngela() {
+  let etatLocal = [];
   
-  const enfant = spawn("node", ["EryXenX.js"], {
-    cwd: __dirname,
-    stdio: "inherit",
-    shell: true
-  });
+  // Charge les anciens cookies s'ils existent
+  if (fs.existsSync(appstatePath)) {
+    try {
+      etatLocal = JSON.parse(fs.readFileSync(appstatePath, "utf8"));
+    } catch {
+      etatLocal = [];
+    }
+  }
 
-  enfant.on("close", () => {
-    log.warn("🔄 Angela s'est arrêtée — je la relance !");
-    setTimeout(startProject, 3000); // attend 3s → redémarre
+  // Si cookies vides → utilise email + mot de passe
+  const donneesConnexion = etatLocal.length > 0 ? etatLocal : identifiants;
+
+  login(donneesConnexion, {
+    logLevel: "info",
+    selfListen: true,
+    listenEvents: true,
+    forceLogin: false
+  }, (err, api) => {
+    if (err) {
+      console.log("❌ Erreur :", err.error || err);
+      // Cookies périmés → on efface et on reprend avec email/mdp
+      if (err.error?.includes("login") || err.error?.includes("401") || err.error?.includes("session")) {
+        console.log("🔄 Session renouvelée...");
+        if (fs.existsSync(appstatePath)) fs.unlinkSync(appstatePath);
+        setTimeout(demarrerAngela, 5000);
+      }
+      return;
+    }
+
+    // ✅ Sauvegarde immédiate des nouveaux cookies
+    api.getAppstate((nouveauxCookies) => {
+      sauvegarderAppstate(nouveauxCookies);
+    });
+
+    console.log("");
+    console.log("🤖 ANGELA est ACTIVE ✨");
+    console.log("👑 Créée par Ariel Aks Otaku");
+    console.log("✅ Sauvegarde auto activée — plus besoin de copier les cookies !");
+    console.log("");
+
+    // 📨 Écoute des messages
+    api.listenMqtt((erreur, message) => {
+      if (erreur) {
+        console.log("⚠️ Déconnexion → reconnexion...");
+        setTimeout(demarrerAngela, 3000);
+        return;
+      }
+
+      // ICI tu mettras toutes tes commandes d'Angela
+      // Exemple : si quelqu'un écrit "Angela salut" → elle répond
+      if (message?.body) {
+        const corps = message.body.trim();
+        const expediteurID = message.senderID;
+
+        // Ne répond pas aux messages du bot lui-même
+        if (expediteurID === api.getCurrentUserID()) return;
+
+        // ✅ Si c'est TOI le créateur 🥰
+        if (corps.match(/^angela salut$/i) || corps.match(/^salut angela$/i)) {
+          if (expediteurID === "TON_ID_ICI") { // Mets ton ID Facebook à la place
+            api.sendMessage("Coucou mon créateur Ariel Aks Otaku 🥰❤️ Je suis contente d'être là !", message.threadID);
+          } else {
+            api.sendMessage("Salut ! Je suis Angela, créée par Ariel Aks Otaku 😊", message.threadID);
+          }
+        }
+      }
+    });
   });
 }
 
-startProject();
-
-// ==================================================
-// 🌸 GARDER TOUJOURS ACTIF SUR RENDER
-// ==================================================
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send("🌸 ANGELA EN LIGNE — Pour toujours avec toi 💖");
-});
-
-app.get('/ping', (req, res) => {
-  res.send("🌸 Je suis là !");
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Serveur actif port ${PORT}`);
-});
-
-// S'APPELLE TOUT SEUL TOUTES LES 20 SECONDES
-setInterval(() => {
-  console.log("🌸 Toujours là pour toi Ariel Aks Otaku 💖");
-}, 20000);
+// 🎯 On lance tout !
+demarrerAngela();
